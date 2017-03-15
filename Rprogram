@@ -1,0 +1,94 @@
+library(class) 
+library(kknn)
+library(knncat)
+library(rpart.plot)
+library(C50)
+library(rpart)
+
+minmax<-function(a,min,max)    #Normalisation Function
+{
+  
+  w<-((a-min)/(max-min))
+  
+  return(w)   
+}
+
+options(max.print = 99999999)
+
+HR1<-read.csv("F:/kdd/HR1.csv")       #Loading Preprocessed CSV File
+
+#Normalisation
+HR1[,1]<-as.factor(minmax(HR1[,1],min(HR1[,1]),max(HR1[,1])))
+HR1[,2]<-as.factor(minmax(HR1[,2],min(HR1[,2]),max(HR1[,2])))
+HR1[,3]<-as.factor(minmax(HR1[,3],min(HR1[,3]),max(HR1[,3])))
+HR1[,4]<-as.factor(minmax(HR1[,4],min(HR1[,4]),max(HR1[,4])))
+HR1[,5]<-as.factor(minmax(HR1[,5],min(HR1[,5]),max(HR1[,5])))
+HR1[,6]<-as.factor(minmax(HR1[,6],min(HR1[,6]),max(HR1[,6])))
+HR1[,8]<-as.factor(minmax(HR1[,8],min(HR1[,8]),max(HR1[,8])))
+HR1[,9]<-as.factor(minmax(HR1[,9],min(HR1[,9]),max(HR1[,9])))
+HR1[,10]<-as.factor(minmax(HR1[,10],min(HR1[,10]),max(HR1[,10])))
+HR1[,11]<-as.factor(minmax(HR1[,11],min(HR1[,11]),max(HR1[,11])))
+HR1[,12]<-as.factor(minmax(HR1[,12],min(HR1[,12]),max(HR1[,12])))
+HR1[,13]<-as.factor(minmax(HR1[,13],min(HR1[,13]),max(HR1[,13])))
+HR1[,14]<-as.factor(minmax(HR1[,14],min(HR1[,14]),max(HR1[,14])))
+HR1[,15]<-as.factor(minmax(HR1[,15],min(HR1[,15]),max(HR1[,15])))
+HR1[,16]<-as.factor(minmax(HR1[,16],min(HR1[,16]),max(HR1[,16])))
+HR1[,17]<-as.factor(minmax(HR1[,17],min(HR1[,17]),max(HR1[,17])))
+HR1[,18]<-as.factor(minmax(HR1[,18],min(HR1[,18]),max(HR1[,18])))
+HR1[,19]<-as.factor(minmax(HR1[,19],min(HR1[,19]),max(HR1[,19])))
+HR1[,20]<-as.factor(minmax(HR1[,20],min(HR1[,20]),max(HR1[,20])))
+HR1[,21]<-as.factor(minmax(HR1[,21],min(HR1[,21]),max(HR1[,21])))
+HR1[,7]<-as.factor(HR1[,7])
+
+ran<-sample(1:14999, 4500, replace=FALSE)   #Randomly selecting Test and training Data
+test<-HR1[ran,]
+train<-HR1[-ran,]
+
+#1)implementing KNN 
+pred1<-knn(train[,-7],test[,-7],train[,7],k=2)#for k=2
+table(Predict=pred1, Actual=test[,7])
+
+pred1<-knn(train[,-7],test[,-7],train[,7],k=3)#for k=3
+table(Predict=pred1, Actual=test[,7])
+
+pred1<-knn(train[,-7],test[,-7],train[,7],k=10)#for k=10
+table(Predict=pred1, Actual=test[,7])
+
+pred1<-knn(train[,-7],test[,-7],train[,7],k=55)#for k=55
+table(Predict=pred1, Actual=test[,7])
+
+#2)Implementing KKNN
+predict_k1<-kknn(formula=left~.,train,test,kernel="triangular",k=2) #For k=2
+fit <- fitted(predict_k1)
+view1<-table(Predict=fit,Actual=test[,7])
+View(view1)
+
+predict_k1<-kknn(formula=left~.,train,test,kernel="triangular",k=3) #For k=3
+fit <- fitted(predict_k1)
+view2<-table(Predict=fit,Actual=test[,7])
+View(view2)
+
+predict_k1<-kknn(formula=left~.,train,test,kernel="triangular",k=55)#For k=55
+fit <- fitted(predict_k1)
+view1<-table(Predict=fit,Actual=test[,7])
+View(view1)
+
+predict_k1<-kknn(formula=left~.,train,test,kernel="triangular",k=75) #For k=75
+fit <- fitted(predict_k1)
+view2<-table(Predict=fit,Actual=test[,7])
+View(view2)
+
+#3)Implementing C5.0
+training_left<-C5.0(train[,-7],train[,7])
+summary(training_left)
+predict<-predict(training_left,test)
+table(Predicted=predict, Actual=test[,7])
+plot(training_left)
+
+#4)Implementing CART
+index_left<-sample(nrow(HR1),as.integer(0.70*nrow(HR1)))
+training<-rpart(left~., data=HR1[index_left,],method = "class")
+testing<-HR1[-index_left,]
+predictcart<-predict(training,testing,type="class")
+left<-HR1[-index_left,7]
+table(Predicted=predictcart,Actual=left)
